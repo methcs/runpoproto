@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import AdminRacePanel from "@/components/admin-race-panel"
 import {
   Calendar,
   MapPin,
@@ -36,6 +37,7 @@ interface Participant {
 
 interface Race {
   id: number
+  externalId: number
   title: string
   date: string
   location: string
@@ -617,34 +619,22 @@ export default function YarisTakvimiPage() {
   })
   const [races, setRaces] = useState<Race[]>([])
 
-  // Load races from localStorage on mount
+  // Load races from database on mount
   useEffect(() => {
-    const savedRaces = localStorage.getItem("runpo-races")
-    if (savedRaces) {
+    const loadRaces = async () => {
       try {
-        const parsedRaces = JSON.parse(savedRaces)
-        // Check if races are outdated (from 2025), if so, use initialRaces
-        if (parsedRaces.length > 0 && parsedRaces[0].date && parsedRaces[0].date.includes("2025")) {
-          localStorage.removeItem("runpo-races")
-          setRaces(initialRaces)
-        } else {
-          setRaces(parsedRaces)
+        const response = await fetch('/api/races')
+        if (response.ok) {
+          const data = await response.json()
+          setRaces(data)
         }
       } catch (error) {
-        console.error("Error loading races from localStorage:", error)
-        setRaces(initialRaces)
+        console.error('Error loading races:', error)
+        // If database fails, races will remain empty
       }
-    } else {
-      setRaces(initialRaces)
     }
+    loadRaces()
   }, [])
-
-  // Save races to localStorage whenever they change
-  useEffect(() => {
-    if (races.length > 0) {
-      localStorage.setItem("runpo-races", JSON.stringify(races))
-    }
-  }, [races])
 
   // Filter races based on search term
   const filteredRaces = races.filter((race) => {
@@ -742,35 +732,64 @@ export default function YarisTakvimiPage() {
     }
   }
 
-  const handleRegistration = (e: React.FormEvent) => {
+  const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedRace) return
 
-    const newParticipant: Participant = {
-      id: Date.now(),
-      name: registrationForm.name,
-      surname: registrationForm.surname,
-      email: registrationForm.email,
-      registrationDate: new Date().toISOString(),
+    try {
+      // Send registration to API
+      const response = await fetch("/api/registrations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          raceId: selectedRace.externalId,
+          name: registrationForm.name,
+          surname: registrationForm.surname,
+          email: registrationForm.email,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Registration failed")
+      }
+
+      const data = await response.json()
+
+      // Update local state to show the participant
+      const newParticipant: Participant = {
+        id: data.registration.id,
+        name: registrationForm.name,
+        surname: registrationForm.surname,
+        email: registrationForm.email,
+        registrationDate: data.registration.registrationDate,
+      }
+
+      setRaces(
+        races.map((race) =>
+          race.id === selectedRace.id
+            ? { ...race, participants: [...(race.participants || []), newParticipant] }
+            : race,
+        ),
+      )
+
+      // Reset form
+      setRegistrationForm({
+        name: "",
+        surname: "",
+        email: "",
+      })
+      setShowRegistrationModal(false)
+      setSelectedRace(null)
+
+      // Show success message
+      alert(`🎉 Başarıyla kayıt oldunuz! ${selectedRace.title} yarışında görüşmek üzere!`)
+    } catch (error) {
+      console.error("Registration error:", error)
+      alert(`❌ Kayıt işlemi başarısız: ${error instanceof Error ? error.message : "Lütfen tekrar deneyiniz"}`)
     }
-
-    setRaces(
-      races.map((race) =>
-        race.id === selectedRace.id ? { ...race, participants: [...(race.participants || []), newParticipant] } : race,
-      ),
-    )
-
-    // Reset form
-    setRegistrationForm({
-      name: "",
-      surname: "",
-      email: "",
-    })
-    setShowRegistrationModal(false)
-    setSelectedRace(null)
-
-    // Show success message
-    alert(`🎉 Başarıyla kayıt oldunuz! ${selectedRace.title} yarışında görüşmek üzere!`)
   }
 
   const openRegistrationModal = (race: Race) => {
@@ -778,49 +797,59 @@ export default function YarisTakvimiPage() {
     setShowRegistrationModal(true)
   }
 
-  const openParticipantsModal = (race: Race) => {
+  const openParticipantsModal = async (race: Race) => {
     setSelectedRace(race)
     setShowParticipantsModal(true)
+    
+    // Fetch participants from database
+    try {
+      const response = await fetch(`/api/registrations?raceId=${race.externalId}`)
+      if (response.ok) {
+        const raceData = await response.json()
+        // Update race with fetched participants from database
+        setRaces(
+          races.map((r) =>
+            r.id === race.id ? { ...r, participants: raceData.registrations } : r,
+          ),
+        )
+      }
+    } catch (error) {
+      console.error("Error fetching participants:", error)
+    }
   }
 
-  const exportToExcel = (race: Race) => {
-    if (!race.participants || race.participants.length === 0) {
-      alert("Bu yarışta henüz katılımcı yok.")
-      return
+  const exportToExcel = async (race: Race) => {
+    try {
+      if (!race.participants || race.participants.length === 0) {
+        alert("Bu yarışta henüz katılımcı yok.")
+        return
+      }
+
+      // Use the API endpoint to download CSV
+      const response = await fetch(`/api/registrations/export?raceId=${race.externalId}&format=csv`)
+      
+      if (!response.ok) {
+        throw new Error("Export failed")
+      }
+
+      // Get the CSV content and create download
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      
+      const fileName = `${race.title.replace(/\s+/g, "_")}_Katilimcilar_${new Date().toISOString().split("T")[0]}.csv`
+      
+      link.setAttribute("href", url)
+      link.setAttribute("download", fileName)
+      link.style.visibility = "hidden"
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error("Export error:", error)
+      alert("Excel indirme işlemi başarısız oldu. Lütfen tekrar deneyiniz.")
     }
-
-    // CSV header
-    const headers = ["Sıra", "Ad", "Soyad", "E-Mail", "Kayıt Tarihi"]
-
-    // CSV rows
-    const rows = race.participants.map((participant, index) => [
-      index + 1,
-      participant.name,
-      participant.surname,
-      participant.email,
-      new Date(participant.registrationDate).toLocaleDateString("tr-TR"),
-    ])
-
-    // Combine headers and rows
-    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n")
-
-    // Add UTF-8 BOM for proper Turkish character display in Excel
-    const BOM = "\uFEFF"
-    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" })
-
-    // Create download link
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-
-    const fileName = `${race.title.replace(/\s+/g, "_")}_Katilimcilar_${new Date().toISOString().split("T")[0]}.csv`
-
-    link.setAttribute("href", url)
-    link.setAttribute("download", fileName)
-    link.style.visibility = "hidden"
-
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   const getTotalParticipants = () => {
@@ -887,20 +916,8 @@ export default function YarisTakvimiPage() {
 
             {/* Admin Controls */}
             {isAdmin && (
-              <div className="flex justify-center gap-4 mb-8">
-                <Button
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  className={`${isEditMode ? "bg-red-500 hover:bg-red-600" : "bg-yellow-400 hover:bg-yellow-500"} text-black font-semibold`}
-                >
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  {isEditMode ? "Düzenlemeyi Bitir" : "Takvimi Düzenle"}
-                </Button>
-                {isEditMode && (
-                  <Button onClick={() => setShowAddRace(true)} className="bg-green-500 hover:bg-green-600 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Yarış Ekle
-                  </Button>
-                )}
+              <div className="text-center">
+                <p className="text-yellow-400 font-semibold text-sm">✓ Yönetici Paneli Aktif</p>
               </div>
             )}
           </div>
@@ -956,6 +973,15 @@ export default function YarisTakvimiPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      {/* Admin Race Management Panel */}
+      {isAdmin && (
+        <section className="bg-gray-950 text-white py-20 px-4 border-y border-yellow-400/30">
+          <div className="container mx-auto max-w-6xl">
+            <AdminRacePanel />
+          </div>
+        </section>
       )}
 
       {/* Race Calendar */}

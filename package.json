@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-dropdown-menu": "^2.1.0",
     "@radix-ui/react-label": "^2.1.0",
@@ -19,6 +20,7 @@
     "@types/nodemailer": "^6.4.20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vercel/postgres": "^0.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dns": "0.2.2",
@@ -37,6 +39,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "15.2.4",
     "postcss": "^8.5",
+    "prisma": "^5.22.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   }
