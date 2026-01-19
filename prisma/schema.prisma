@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Race {
+  id            Int       @id @default(autoincrement())
+  externalId    Int       @unique
+  title         String
+  date          String
+  location      String
+  distance      String
+  category      String
+  description   String
+  websiteUrl    String?
+  registrationUrl String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  registrations Registration[]
+
+  @@map("races")
+}
+
+model Registration {
+  id                Int       @id @default(autoincrement())
+  raceId            Int
+  name              String
+  surname           String
+  email             String
+  preferredDistance String?
+  registrationDate  DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+
+  // Relations
+  race              Race      @relation(fields: [raceId], references: [id], onDelete: Cascade)
+
+  @@index([raceId])
+  @@map("registrations")
+}

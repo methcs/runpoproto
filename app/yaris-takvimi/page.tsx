@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import AdminRacePanel from "@/components/admin-race-panel"
 import {
   Calendar,
   MapPin,
@@ -31,11 +32,13 @@ interface Participant {
   name: string
   surname: string
   email: string
+  preferredDistance?: string
   registrationDate: string
 }
 
 interface Race {
   id: number
+  externalId: number
   title: string
   date: string
   location: string
@@ -46,556 +49,6 @@ interface Race {
   description: string
   participants?: Participant[]
 }
-
-const initialRaces: Race[] = [
-  // Ocak 2026
-  {
-    id: 1,
-    title: "Salomon Çeşme YM",
-    date: "2026-02-11",
-    location: "Çeşme, İzmir",
-    distance: "10K, 21K, 42K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://salomonceşme.com",
-    description: "Çeşme'nin eşsiz manzarasında yol koşusu.",
-    participants: [],
-  },
-  {
-    id: 2,
-    title: "Tahtalı Run to Sky",
-    date: "2026-02-09",
-    location: "Kemer, Antalya",
-    distance: "12K, 27K, 65K",
-    category: "Ultra Trail",
-    websiteUrl: "https://tahtaliruntosky.com",
-    description: "Antalya'nın zirvesine tırmanış. UTMB Index ve ITRA puanlı.",
-    participants: [],
-  },
-  {
-    id: 3,
-    title: "Kyzikos Ultra",
-    date: "2026-02-17",
-    location: "Erdek, Balıkesir",
-    distance: "5K, 20K, 35K, 65K",
-    category: "Ultra Trail",
-    websiteUrl: "https://kyzikosultra.com",
-    description: "Erdek'in doğal güzelliklerinde UTMB Index puanlı ultra trail.",
-    participants: [],
-  },
-  {
-    id: 4,
-    title: "Cadde 10K - 21K",
-    date: "2026-02-25",
-    location: "Caddebostan, İstanbul",
-    distance: "10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://cadde10k.com",
-    description: "Caddebostan sahilinde şehir koşusu.",
-    participants: [],
-  },
-  {
-    id: 5,
-    title: "Efeler Yolu Ultra Trail",
-    date: "2026-02-24",
-    location: "Birgi, İzmir",
-    distance: "5K, 15K, 30K, 50K, 80K",
-    category: "Ultra Trail",
-    websiteUrl: "https://efeleryoluultra.com",
-    description: "ITRA ve UTMB Index puanlı yeni ultra trail etkinliği.",
-    participants: [],
-  },
-  {
-    id: 6,
-    title: "Gökçeada Ultra Trail Run",
-    date: "2026-02-31",
-    location: "Gökçeada, Çanakkale",
-    distance: "5K, 11K, 33K, 44K",
-    category: "Ultra Trail",
-    websiteUrl: "https://gokceadaultra.com",
-    description: "Ada'nın doğal güzelliklerinde ITRA puanlı trail koşusu.",
-    participants: [],
-  },
-  {
-    id: 7,
-    title: "Latmos Ultra",
-    date: "2026-05-31",
-    location: "Bafa, Aydın",
-    distance: "10K, 17K, 26K, 45K",
-    category: "Ultra Trail",
-    websiteUrl: "https://latmosultra.com",
-    description: "Bafa Gölü ve antik kalıntılar eşliğinde trail deneyimi.",
-    participants: [],
-  },
-  // Haziran 2025
-  {
-    id: 8,
-    title: "Mozart 100 by UTMB",
-    date: "2026-06-07",
-    location: "Salzburg, Avusturya",
-    distance: "9K, 20K, 37K, 45K, 92K, 119K",
-    category: "Ultra Trail",
-    websiteUrl: "https://mozart100.com",
-    description: "UTMB World Series yarışı, Avusturya Alpleri'nde.",
-    participants: [],
-  },
-  {
-    id: 9,
-    title: "Sapanca Ultra",
-    date: "2026-06-14",
-    location: "Sapanca, Sakarya",
-    distance: "6K, 13K, 24K, 40K, 60K",
-    category: "Ultra Trail",
-    websiteUrl: "https://sapancaultra.com",
-    description: "Sapanca Gölü manzarasında ITRA ve UTMB Index puanlı trail.",
-    participants: [],
-  },
-  {
-    id: 10,
-    title: "Mont Blanc Maratonu",
-    date: "2026-06-26",
-    location: "Chamonix, Fransa",
-    distance: "10K, 23K, 42K, 90K",
-    category: "Ultra Trail",
-    websiteUrl: "https://montblancmarathon.net",
-    description: "Dünyanın en ikonik dağ maratonlarından biri.",
-    participants: [],
-  },
-  {
-    id: 11,
-    title: "METU Trail Run",
-    date: "2026-06-28",
-    location: "ODTÜ, Ankara",
-    distance: "6K, 12K, 25K",
-    category: "Trail",
-    websiteUrl: "https://metutrail.com",
-    description: "ODTÜ ormanlarında trail koşusu.",
-    participants: [],
-  },
-  {
-    id: 12,
-    title: "Gölpazarı Ultra Trail",
-    date: "2026-06-27",
-    location: "Gölpazarı, Bilecik",
-    distance: "10K, 30K, 65K",
-    category: "Ultra Trail",
-    websiteUrl: "https://golpazariultra.com",
-    description: "Bilecik'in doğal güzelliklerinde ultra trail.",
-    participants: [],
-  },
-  // Temmuz 2025
-  {
-    id: 13,
-    title: "Aladağlar Epic Trail",
-    date: "2026-07-11",
-    location: "Niğde, Demirkazık",
-    distance: "13K, 25K, 55K",
-    category: "Ultra Trail",
-    websiteUrl: "https://aladaglarepictrail.com",
-    description: "Aladağlar'ın muhteşem manzarasında epic trail deneyimi.",
-    participants: [],
-  },
-  {
-    id: 14,
-    title: "Uludağ Premium Ultra Trail",
-    date: "2026-07-19",
-    location: "Bursa",
-    distance: "6K, 16K, 30K, 42K, 66K, 95K",
-    category: "Ultra Trail",
-    websiteUrl: "https://uludagultra.com",
-    description: "Uludağ'ın zorlu parkurunda ITRA ve UTMB Index puanlı ultra trail.",
-    participants: [],
-  },
-  {
-    id: 15,
-    title: "Palandöken Run to Sky",
-    date: "2026-07-25",
-    location: "Erzurum",
-    distance: "5K VK, 25K, 51K",
-    category: "Ultra Trail",
-    websiteUrl: "https://palandokenruntosky.com",
-    description: "Palandöken'in zirvesine tırmanış. ITRA puanlı yeni etkinlik.",
-    participants: [],
-  },
-  {
-    id: 16,
-    title: "Kanyon Ulubey Ultra Trail",
-    date: "2026-07-26",
-    location: "Ulubey, Uşak",
-    distance: "10K, 35K, 60K",
-    category: "Ultra Trail",
-    websiteUrl: "https://kanyonulubey.com",
-    description: "Ulubey Kanyonu'nun eşsiz manzarasında ultra trail.",
-    participants: [],
-  },
-  // Ağustos 2025
-  {
-    id: 17,
-    title: "Gece Maratonu",
-    date: "2026-08-02",
-    location: "Sarıyer, İstanbul",
-    distance: "42K",
-    category: "Maraton",
-    websiteUrl: "https://gecemaratonu.com",
-    description: "İstanbul'da gece koşusu deneyimi.",
-    participants: [],
-  },
-  {
-    id: 18,
-    title: "Eskişehir Yarı Maratonu",
-    date: "2026-08-03",
-    location: "Eskişehir",
-    distance: "10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://eskisehiryarimaratonu.com",
-    description: "Eskişehir'in tarihi sokaklarında koşu deneyimi.",
-    participants: [],
-  },
-  {
-    id: 19,
-    title: "Ultra Abant",
-    date: "2026-08-09",
-    location: "Bolu",
-    distance: "6K, 18K, 33K, 60K",
-    category: "Ultra Trail",
-    websiteUrl: "https://ultraabant.com",
-    description: "Abant Gölü çevresinde ITRA ve UTMB Index puanlı ultra trail.",
-    participants: [],
-  },
-  {
-    id: 20,
-    title: "Runfire Salt Lake",
-    date: "2026-08-22",
-    location: "Aksaray",
-    distance: "10K, 15K, 20K, 40K, 80K, 100M",
-    category: "Ultra Trail",
-    websiteUrl: "https://runfiresaltlake.com",
-    description: "Tuz Gölü'nün eşsiz manzarasında ITRA ve UTMB Index puanlı ultra trail.",
-    participants: [],
-  },
-  {
-    id: 21,
-    title: "Boğaziçi Kıtalararası Yüzme",
-    date: "2026-08-24",
-    location: "İstanbul",
-    distance: "6.5K Yüzme",
-    category: "Yüzme",
-    websiteUrl: "https://bogaziciyuzme.com",
-    description: "Asya'dan Avrupa'ya efsanevi yüzme yarışı.",
-    participants: [],
-  },
-  {
-    id: 22,
-    title: "UTMB Mont Blanc",
-    date: "2026-08-29",
-    location: "Chamonix, Fransa",
-    distance: "40K-170K",
-    category: "Ultra Trail",
-    websiteUrl: "https://utmb.world",
-    description: "Dünyanın en prestijli ultra trail yarışı.",
-    participants: [],
-  },
-  {
-    id: 23,
-    title: "Edirne Maratonu",
-    date: "2026-08-31",
-    location: "Edirne",
-    distance: "10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://edirnemaratonu.org.tr",
-    description: "Tarihi Edirne'de kültürel koşu deneyimi.",
-    participants: [],
-  },
-  {
-    id: 24,
-    title: "Chios Sakız Adası YM",
-    date: "2026-08-31",
-    location: "Sakız Adası, Yunanistan",
-    distance: "5K, 10.5K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://chiosmarathon.gr",
-    description: "Yunanistan'ın güzel Sakız Adası'nda yarı maraton.",
-    participants: [],
-  },
-  // Eylül 2025
-  {
-    id: 25,
-    title: "Merrell Belgrad Ultra Trail",
-    date: "2026-09-05",
-    location: "Kemerburgaz, İstanbul",
-    distance: "5K, 15K, 30K, 60K",
-    category: "Ultra Trail",
-    websiteUrl: "https://www.belgradultra.com/tr",
-    description: "Belgrad Ormanı'nda ITRA ve UTMB Index puanlı ultra trail.",
-    participants: [],
-  },
-  {
-    id: 26,
-    title: "9 Eylül İzmir'in Kurtuluşu YM",
-    date: "2026-09-07",
-    location: "İzmir",
-    distance: "21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://izmiryarimaratonu.com",
-    description: "İzmir'in kurtuluş günü anısına yarı maraton.",
-    participants: [],
-  },
-  {
-    id: 27,
-    title: "Frig Ultra",
-    date: "2026-09-12",
-    location: "Afyonkarahisar",
-    distance: "2K VK, 6K, 12K, 22K, 38K, 54K",
-    category: "Ultra Trail",
-    websiteUrl: "https://frigultra.com",
-    description: "Frig Vadisi'nde ITRA ve UTMB Index puanlı trail koşusu.",
-    participants: [],
-  },
-  {
-    id: 28,
-    title: "İstanbul'u Koşuyorum Asya",
-    date: "2026-09-14",
-    location: "Üsküdar, İstanbul",
-    distance: "5K, 10K",
-    category: "10K",
-    websiteUrl: "https://istanbulukosuyorum.istanbul",
-    description: "İstanbul'un Asya yakasında koşu etkinliği.",
-    participants: [],
-  },
-  {
-    id: 29,
-    title: "Nilüfer BURSA YM",
-    date: "2026-09-14",
-    location: "Nilüfer, Bursa",
-    distance: "5K, 10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://niluferyarimaratonu.com",
-    description: "Bursa Nilüfer'de yarı maraton.",
-    participants: [],
-  },
-  {
-    id: 30,
-    title: "Under Armour Gece Koşuları",
-    date: "2026-09-20",
-    location: "Belgrad Ormanı, İstanbul",
-    distance: "6K, 12K",
-    category: "Trail",
-    websiteUrl: "https://underarmourgece.com",
-    description: "Belgrad Ormanı'nda gece trail koşusu.",
-    participants: [],
-  },
-  {
-    id: 31,
-    title: "Kayseri Yarı Maratonu",
-    date: "2026-09-21",
-    location: "Kayseri",
-    distance: "10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://kayseriyarimaratonu.com",
-    description: "Erciyes Dağı manzarasında yarı maraton.",
-    participants: [],
-  },
-  {
-    id: 32,
-    title: "Berlin Maratonu",
-    date: "2026-09-21",
-    location: "Berlin, Almanya",
-    distance: "42K",
-    category: "Maraton",
-    websiteUrl: "https://berlin-marathon.com",
-    description: "Dünyanın en hızlı maraton parkurlarından biri.",
-    participants: [],
-  },
-  {
-    id: 33,
-    title: "Kaçkar by UTMB",
-    date: "2026-09-26",
-    location: "Rize",
-    distance: "20K, 50K, 100K",
-    category: "Ultra Trail",
-    websiteUrl: "https://kackar.utmb.world/tr",
-    description: "UTMB World Series'in Türkiye ayağı, Kaçkar Dağları'nda.",
-    participants: [],
-  },
-  {
-    id: 34,
-    title: "Ultimate Cunda",
-    date: "2026-09-27",
-    location: "Ayvalık, Cunda",
-    distance: "7K, 12K, 22K + Yüzme",
-    category: "Maraton",
-    websiteUrl: "https://www.teamkronos.com/ultimate-cunda",
-    description: "Cunda Adası'nda koşu ve yüzme kombinasyonu.",
-    participants: [],
-  },
-  {
-    id: 35,
-    title: "Urla'da Biriz Koşusu",
-    date: "2026-09-28",
-    location: "Urla, İzmir",
-    distance: "5K, 10K",
-    category: "10K",
-    websiteUrl: "https://urlakosusi.com",
-    description: "Urla'da sosyal sorumluluk koşusu.",
-    participants: [],
-  },
-  // Ekim 2025
-  {
-    id: 36,
-    title: "Eker I Run Koşusu",
-    date: "2026-10-05",
-    location: "Bursa",
-    distance: "5K, 15K, 42K",
-    category: "Maraton",
-    websiteUrl: "https://ekerirun.com",
-    description: "Bursa'da geleneksel Eker koşusu.",
-    participants: [],
-  },
-  {
-    id: 37,
-    title: "Bodrum Yarı Maratonu",
-    date: "2026-10-05",
-    location: "Bodrum",
-    distance: "5K, 10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://bodrumyarimaratonu.com",
-    description: "Ege'nin incisi Bodrum'da deniz kenarında UTMB Index puanlı koşu.",
-    participants: [],
-  },
-  {
-    id: 38,
-    title: "Üsküp Yarı Maratonu",
-    date: "2026-10-05",
-    location: "Üsküp, Kuzey Makedonya",
-    distance: "21K",
-    category: "Yarı Maraton",
-    websiteUrl: "http://skopskimaraton.com.mk/en/",
-    description: "Üsküp'ün tarihi merkezinde koşu deneyimi.",
-    participants: [],
-  },
-  {
-    id: 39,
-    title: "Bosphorun",
-    date: "2026-10-12",
-    location: "Kuruçeşme, İstanbul",
-    distance: "10K",
-    category: "10K",
-    websiteUrl: "https://bosphorun.istanbul",
-    description: "Boğaz manzarasında 10K koşusu.",
-    participants: [],
-  },
-  {
-    id: 40,
-    title: "Salomon Cappadocia Ultra Trail",
-    date: "2026-10-18",
-    location: "Nevşehir",
-    distance: "14K, 38K, 63K, 119K",
-    category: "Ultra Trail",
-    websiteUrl: "https://cappadociaultratrail.com",
-    description: "Kapadokya'nın büyüleyici manzaraları eşliğinde ITRA ve UTMB Index puanlı ultra trail.",
-    participants: [],
-  },
-  {
-    id: 41,
-    title: "Big Dog's Backyard Ultra",
-    date: "2026-10-18",
-    location: "Tennessee, ABD",
-    distance: "Backyard Ultra",
-    category: "Ultra Trail",
-    websiteUrl: "https://backyardultra.com",
-    description: "Dünyanın en zorlu backyard ultra formatı.",
-    participants: [],
-  },
-  {
-    id: 42,
-    title: "Büyükada Yarı Maratonu",
-    date: "2026-10-19",
-    location: "Büyükada, İstanbul",
-    distance: "5K, 10K, 21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://buyukadayarimaratonu.com",
-    description: "Büyükada'nın yokuşlu sokaklarında zorlu yarı maraton.",
-    participants: [],
-  },
-  {
-    id: 43,
-    title: "Amsterdam Maratonu",
-    date: "2026-10-19",
-    location: "Amsterdam, Hollanda",
-    distance: "8K, 21K, 42K",
-    category: "Maraton",
-    websiteUrl: "https://tcsamsterdammarathon.nl",
-    description: "Hollanda'nın düz parkurunda hızlı maraton.",
-    participants: [],
-  },
-  {
-    id: 44,
-    title: "Kaş Yarı Maratonu",
-    date: "2026-10-26",
-    location: "Kaş, Antalya",
-    distance: "21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://www.kasyarimadaton.com",
-    description: "Akdeniz'in turkuaz sularına karşı koşu deneyimi.",
-    participants: [],
-  },
-  {
-    id: 45,
-    title: "Valencia Yarı Maratonu",
-    date: "2026-10-26",
-    location: "Valencia, İspanya",
-    distance: "21K",
-    category: "Yarı Maraton",
-    websiteUrl: "https://www.valenciaciudaddelrunning.com/en/half/half-marathon",
-    description: "İspanya'nın güneşli şehri Valencia'da yarı maraton.",
-    participants: [],
-  },
-  // Kasım 2025
-  {
-    id: 46,
-    title: "İstanbul Maratonu",
-    date: "2026-11-02",
-    location: "İstanbul",
-    distance: "15K, 42K",
-    category: "Maraton",
-    websiteUrl: "https://maraton.istanbul",
-    description: "Türkiye'nin en büyük maraton etkinliği. Boğaz köprüsü üzerinden geçen eşsiz parkur.",
-    participants: [],
-  },
-  {
-    id: 47,
-    title: "Marmaris Ultra",
-    date: "2026-11-15",
-    location: "Marmaris",
-    distance: "Multi-distance",
-    category: "Ultra Trail",
-    websiteUrl: "https://marmarisultra.com",
-    description: "Marmaris'in doğal güzellikleri eşliğinde ultra trail.",
-    participants: [],
-  },
-  {
-    id: 48,
-    title: "İda Ultra",
-    date: "2026-11-29",
-    location: "Çanakkale",
-    distance: "Multi-distance",
-    category: "Ultra Trail",
-    websiteUrl: "https://www.idaultra.com/#intro",
-    description: "Kazdağları'nın eteklerinde zorlu ultra trail deneyimi.",
-    participants: [],
-  },
-  // Aralık 2025
-  {
-    id: 49,
-    title: "Valencia Maratonu",
-    date: "2026-12-07",
-    location: "Valencia, İspanya",
-    distance: "42K",
-    category: "Maraton",
-    websiteUrl: "https://www.valenciaciudaddelrunning.com/en/marathon/marathon",
-    description: "Dünya'nın en hızlı maraton parkurlarından biri, Valencia'da.",
-    participants: [],
-  },
-]
 
 export default function YarisTakvimiPage() {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -614,37 +67,26 @@ export default function YarisTakvimiPage() {
     name: "",
     surname: "",
     email: "",
+    preferredDistance: "",
   })
   const [races, setRaces] = useState<Race[]>([])
 
-  // Load races from localStorage on mount
+  // Load races from database on mount
   useEffect(() => {
-    const savedRaces = localStorage.getItem("runpo-races")
-    if (savedRaces) {
+    const loadRaces = async () => {
       try {
-        const parsedRaces = JSON.parse(savedRaces)
-        // Check if races are outdated (from 2025), if so, use initialRaces
-        if (parsedRaces.length > 0 && parsedRaces[0].date && parsedRaces[0].date.includes("2025")) {
-          localStorage.removeItem("runpo-races")
-          setRaces(initialRaces)
-        } else {
-          setRaces(parsedRaces)
+        const response = await fetch('/api/races')
+        if (response.ok) {
+          const data = await response.json()
+          setRaces(data)
         }
       } catch (error) {
-        console.error("Error loading races from localStorage:", error)
-        setRaces(initialRaces)
+        console.error('Error loading races:', error)
+        // If database fails, races will remain empty
       }
-    } else {
-      setRaces(initialRaces)
     }
+    loadRaces()
   }, [])
-
-  // Save races to localStorage whenever they change
-  useEffect(() => {
-    if (races.length > 0) {
-      localStorage.setItem("runpo-races", JSON.stringify(races))
-    }
-  }, [races])
 
   // Filter races based on search term
   const filteredRaces = races.filter((race) => {
@@ -699,7 +141,7 @@ export default function YarisTakvimiPage() {
     // Default admin password - change this to your own
     const ADMIN_PASSWORD = "runpo2025"
     
-    if (adminPassword === ADMIN_PASSWORD) {
+    if (adminPassword.trim() === ADMIN_PASSWORD) {
       setIsAdmin(true)
       setShowAdminLogin(false)
       setAdminPassword("")
@@ -727,6 +169,7 @@ export default function YarisTakvimiPage() {
     } else {
       const newRace: Race = {
         id: Date.now(),
+        externalId: Math.floor(Math.random() * 1000000),
         title: raceData.title || "",
         date: raceData.date || "",
         location: raceData.location || "",
@@ -742,35 +185,66 @@ export default function YarisTakvimiPage() {
     }
   }
 
-  const handleRegistration = (e: React.FormEvent) => {
+  const handleRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedRace) return
 
-    const newParticipant: Participant = {
-      id: Date.now(),
-      name: registrationForm.name,
-      surname: registrationForm.surname,
-      email: registrationForm.email,
-      registrationDate: new Date().toISOString(),
+    try {
+      // Send registration to API
+      const response = await fetch("/api/registrations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          raceId: selectedRace.externalId,
+          name: registrationForm.name,
+          surname: registrationForm.surname,
+          email: registrationForm.email,
+          preferredDistance: registrationForm.preferredDistance,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Registration failed")
+      }
+
+      const data = await response.json()
+
+      // Update local state to show the participant
+      const newParticipant: Participant = {
+        id: data.registration.id,
+        name: registrationForm.name,
+        surname: registrationForm.surname,
+        email: registrationForm.email,
+        registrationDate: data.registration.registrationDate,
+      }
+
+      setRaces(
+        races.map((race) =>
+          race.id === selectedRace.id
+            ? { ...race, participants: [...(race.participants || []), newParticipant] }
+            : race,
+        ),
+      )
+
+      // Reset form
+      setRegistrationForm({
+        name: "",
+        surname: "",
+        email: "",
+        preferredDistance: "",
+      })
+      setShowRegistrationModal(false)
+      setSelectedRace(null)
+
+      // Show success message
+      alert(`🎉 Başarıyla kayıt oldunuz! ${selectedRace.title} yarışında görüşmek üzere!`)
+    } catch (error) {
+      console.error("Registration error:", error)
+      alert(`❌ Kayıt işlemi başarısız: ${error instanceof Error ? error.message : "Lütfen tekrar deneyiniz"}`)
     }
-
-    setRaces(
-      races.map((race) =>
-        race.id === selectedRace.id ? { ...race, participants: [...(race.participants || []), newParticipant] } : race,
-      ),
-    )
-
-    // Reset form
-    setRegistrationForm({
-      name: "",
-      surname: "",
-      email: "",
-    })
-    setShowRegistrationModal(false)
-    setSelectedRace(null)
-
-    // Show success message
-    alert(`🎉 Başarıyla kayıt oldunuz! ${selectedRace.title} yarışında görüşmek üzere!`)
   }
 
   const openRegistrationModal = (race: Race) => {
@@ -778,49 +252,59 @@ export default function YarisTakvimiPage() {
     setShowRegistrationModal(true)
   }
 
-  const openParticipantsModal = (race: Race) => {
+  const openParticipantsModal = async (race: Race) => {
     setSelectedRace(race)
     setShowParticipantsModal(true)
+    
+    // Fetch participants from database
+    try {
+      const response = await fetch(`/api/registrations?raceId=${race.externalId}`)
+      if (response.ok) {
+        const raceData = await response.json()
+        // Update race with fetched participants from database
+        setRaces(
+          races.map((r) =>
+            r.id === race.id ? { ...r, participants: raceData.registrations } : r,
+          ),
+        )
+      }
+    } catch (error) {
+      console.error("Error fetching participants:", error)
+    }
   }
 
-  const exportToExcel = (race: Race) => {
-    if (!race.participants || race.participants.length === 0) {
-      alert("Bu yarışta henüz katılımcı yok.")
-      return
+  const exportToExcel = async (race: Race) => {
+    try {
+      if (!race.participants || race.participants.length === 0) {
+        alert("Bu yarışta henüz katılımcı yok.")
+        return
+      }
+
+      // Use the API endpoint to download CSV
+      const response = await fetch(`/api/registrations/export?raceId=${race.externalId}&format=csv`)
+      
+      if (!response.ok) {
+        throw new Error("Export failed")
+      }
+
+      // Get the CSV content and create download
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      
+      const fileName = `${race.title.replace(/\s+/g, "_")}_Katilimcilar_${new Date().toISOString().split("T")[0]}.csv`
+      
+      link.setAttribute("href", url)
+      link.setAttribute("download", fileName)
+      link.style.visibility = "hidden"
+
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error("Export error:", error)
+      alert("Excel indirme işlemi başarısız oldu. Lütfen tekrar deneyiniz.")
     }
-
-    // CSV header
-    const headers = ["Sıra", "Ad", "Soyad", "E-Mail", "Kayıt Tarihi"]
-
-    // CSV rows
-    const rows = race.participants.map((participant, index) => [
-      index + 1,
-      participant.name,
-      participant.surname,
-      participant.email,
-      new Date(participant.registrationDate).toLocaleDateString("tr-TR"),
-    ])
-
-    // Combine headers and rows
-    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n")
-
-    // Add UTF-8 BOM for proper Turkish character display in Excel
-    const BOM = "\uFEFF"
-    const blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" })
-
-    // Create download link
-    const link = document.createElement("a")
-    const url = URL.createObjectURL(blob)
-
-    const fileName = `${race.title.replace(/\s+/g, "_")}_Katilimcilar_${new Date().toISOString().split("T")[0]}.csv`
-
-    link.setAttribute("href", url)
-    link.setAttribute("download", fileName)
-    link.style.visibility = "hidden"
-
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   const getTotalParticipants = () => {
@@ -887,20 +371,8 @@ export default function YarisTakvimiPage() {
 
             {/* Admin Controls */}
             {isAdmin && (
-              <div className="flex justify-center gap-4 mb-8">
-                <Button
-                  onClick={() => setIsEditMode(!isEditMode)}
-                  className={`${isEditMode ? "bg-red-500 hover:bg-red-600" : "bg-yellow-400 hover:bg-yellow-500"} text-black font-semibold`}
-                >
-                  <Edit3 className="w-4 h-4 mr-2" />
-                  {isEditMode ? "Düzenlemeyi Bitir" : "Takvimi Düzenle"}
-                </Button>
-                {isEditMode && (
-                  <Button onClick={() => setShowAddRace(true)} className="bg-green-500 hover:bg-green-600 text-white">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Yarış Ekle
-                  </Button>
-                )}
+              <div className="text-center">
+                <p className="text-yellow-400 font-semibold text-sm">✓ Yönetici Paneli Aktif</p>
               </div>
             )}
           </div>
@@ -956,6 +428,15 @@ export default function YarisTakvimiPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      {/* Admin Race Management Panel */}
+      {isAdmin && (
+        <section className="bg-gray-950 text-white py-20 px-4 border-y border-yellow-400/30">
+          <div className="container mx-auto max-w-6xl">
+            <AdminRacePanel />
+          </div>
+        </section>
       )}
 
       {/* Race Calendar */}
@@ -1156,6 +637,18 @@ export default function YarisTakvimiPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Tercih Edilen Mesafe
+                  </label>
+                  <Input
+                    value={registrationForm.preferredDistance}
+                    onChange={(e) => setRegistrationForm({ ...registrationForm, preferredDistance: e.target.value })}
+                    className="bg-gray-800 border-gray-600 text-white"
+                    placeholder="Örn: 5K, 10K, 21K, 42K"
+                  />
+                </div>
+
                 <div className="bg-yellow-400/10 p-4 rounded-lg border border-yellow-400/20">
                   <p className="text-yellow-400 text-sm">💡 Kayıt olduktan sonra koçunuz size ulaşacaktır.</p>
                 </div>
@@ -1217,6 +710,9 @@ export default function YarisTakvimiPage() {
                             </div>
                             <div className="space-y-1 text-sm text-gray-400">
                               <p>📧 {participant.email}</p>
+                              {participant.preferredDistance && (
+                                <p>🏃 Mesafe: <span className="text-green-400 font-medium">{participant.preferredDistance}</span></p>
+                              )}
                               <p className="text-xs text-gray-500">
                                 Kayıt: {new Date(participant.registrationDate).toLocaleDateString("tr-TR")}
                               </p>
