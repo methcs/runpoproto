@@ -18,8 +18,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { raceId, name, surname, email, preferredDistance } = body
 
-    // Validate input
-    if (!raceId || !name || !surname || !email) {
+    // Optionally get authenticated user from Bearer header or httpOnly cookie
+    let token: string | null = null
+    const auth = request.headers.get('authorization')
+    if (auth && auth.startsWith('Bearer ')) {
+      token = auth.replace(/^Bearer\s+/i, '')
+    } else {
+      const cookie = request.cookies.get('rp_token')
+      token = cookie?.value || null
+    }
+
+    let user: any = null
+    if (token) {
+      try {
+        const payload: any = (await import('../../../lib/auth')).verifyToken(token)
+        if (payload?.id) {
+          user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, name: true, email: true } })
+        }
+      } catch (e) {
+        // ignore invalid token
+        user = null
+      }
+    }
+
+    // Validate input: if not authenticated, require name/email
+    if (!raceId || (!user && (!name || !surname || !email))) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -52,9 +75,10 @@ export async function POST(request: NextRequest) {
       registration = await prisma.registration.create({
         data: {
           raceId: race.id,
-          name,
-          surname,
-          email,
+          userId: user?.id || null,
+          name: user?.name || name,
+          surname: surname || '',
+          email: user?.email || email,
           preferredDistance: preferredDistance || null,
         },
       })
@@ -66,9 +90,10 @@ export async function POST(request: NextRequest) {
         registration = await prisma.registration.create({
           data: {
             raceId: race.id,
-            name,
-            surname,
-            email,
+            userId: user?.id || null,
+            name: user?.name || name,
+            surname: surname || '',
+            email: user?.email || email,
             preferredDistance: preferredDistance || null,
           },
         })

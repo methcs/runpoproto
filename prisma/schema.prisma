@@ -33,6 +33,7 @@ model Race {
 model Registration {
   id                Int       @id @default(autoincrement())
   raceId            Int
+  userId            Int?      // optional linking to authenticated user
   name              String
   surname           String
   email             String
@@ -42,7 +43,23 @@ model Registration {
 
   // Relations
   race              Race      @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  user              User?     @relation(fields: [userId], references: [id])
 
   @@index([raceId])
   @@map("registrations")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String?  @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  registrations Registration[]
+
+  @@map("users")
 }

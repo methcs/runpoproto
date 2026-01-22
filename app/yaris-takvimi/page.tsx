@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { useAuth } from '@/components/auth-provider'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -70,6 +71,7 @@ export default function YarisTakvimiPage() {
     preferredDistance: "",
   })
   const [races, setRaces] = useState<Race[]>([])
+  const [currentUser, setCurrentUser] = useState<{ id: number; username: string; name?: string; email?: string } | null>(null)
 
   // Load races from database on mount
   useEffect(() => {
@@ -190,19 +192,21 @@ export default function YarisTakvimiPage() {
     if (!selectedRace) return
 
     try {
+      // Build payload depending on whether a user is signed in
+      const payload: any = { raceId: selectedRace.externalId, preferredDistance: registrationForm.preferredDistance }
+      if (!currentUser) {
+        payload.name = registrationForm.name
+        payload.surname = registrationForm.surname
+        payload.email = registrationForm.email
+      }
+
       // Send registration to API
       const response = await fetch("/api/registrations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          raceId: selectedRace.externalId,
-          name: registrationForm.name,
-          surname: registrationForm.surname,
-          email: registrationForm.email,
-          preferredDistance: registrationForm.preferredDistance,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (!response.ok) {
@@ -215,9 +219,9 @@ export default function YarisTakvimiPage() {
       // Update local state to show the participant
       const newParticipant: Participant = {
         id: data.registration.id,
-        name: registrationForm.name,
-        surname: registrationForm.surname,
-        email: registrationForm.email,
+        name: currentUser ? (currentUser.name || currentUser.username) : registrationForm.name,
+        surname: currentUser ? '' : registrationForm.surname,
+        email: currentUser ? (currentUser.email || '') : registrationForm.email,
         registrationDate: data.registration.registrationDate,
       }
 
@@ -247,8 +251,36 @@ export default function YarisTakvimiPage() {
     }
   }
 
-  const openRegistrationModal = (race: Race) => {
+  const auth = useAuth()
+
+  const openRegistrationModal = async (race: Race) => {
     setSelectedRace(race)
+
+    // Prefer global auth info to avoid extra credential prompts
+    if (auth && auth.user) {
+      const u = auth.user as any
+      setCurrentUser(u)
+      setRegistrationForm((f) => ({ ...f, name: u?.name || '', email: u?.email || '' }))
+      setShowRegistrationModal(true)
+      return
+    }
+
+    // Fallback to API call if auth context is not available for any reason
+    try {
+      const res = await fetch('/api/auth/me')
+      if (res.ok) {
+        const json = await res.json()
+        setCurrentUser(json.user)
+        setRegistrationForm((f) => ({ ...f, name: json.user.name || '', email: json.user.email || '' }))
+      } else {
+        setCurrentUser(null)
+        setRegistrationForm({ name: '', surname: '', email: '', preferredDistance: '' })
+      }
+    } catch (e) {
+      setCurrentUser(null)
+      setRegistrationForm({ name: '', surname: '', email: '', preferredDistance: '' })
+    }
+
     setShowRegistrationModal(true)
   }
 
@@ -597,45 +629,55 @@ export default function YarisTakvimiPage() {
               </div>
 
               <form onSubmit={handleRegistration} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Ad <span className="text-red-400">*</span>
-                  </label>
-                  <Input
-                    value={registrationForm.name}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, name: e.target.value })}
-                    className="bg-gray-800 border-gray-600 text-white"
-                    placeholder="Adınız"
-                    required
-                  />
-                </div>
+                {currentUser ? (
+                  <div className="bg-gray-800 p-3 rounded">
+                    <p className="text-sm">Giriş Yapıldı: <strong>{currentUser.name || currentUser.username}</strong></p>
+                    <p className="text-xs text-gray-400">Kayıtlı e-posta: {currentUser.email || '-'}</p>
+                    <p className="text-sm mt-2">Sadece tercih ettiğiniz mesafeyi girin.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Ad <span className="text-red-400">*</span>
+                      </label>
+                      <Input
+                        value={registrationForm.name}
+                        onChange={(e) => setRegistrationForm({ ...registrationForm, name: e.target.value })}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="Adınız"
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Soyad <span className="text-red-400">*</span>
-                  </label>
-                  <Input
-                    value={registrationForm.surname}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, surname: e.target.value })}
-                    className="bg-gray-800 border-gray-600 text-white"
-                    placeholder="Soyadınız"
-                    required
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Soyad <span className="text-red-400">*</span>
+                      </label>
+                      <Input
+                        value={registrationForm.surname}
+                        onChange={(e) => setRegistrationForm({ ...registrationForm, surname: e.target.value })}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="Soyadınız"
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    E-Mail <span className="text-red-400">*</span>
-                  </label>
-                  <Input
-                    type="email"
-                    value={registrationForm.email}
-                    onChange={(e) => setRegistrationForm({ ...registrationForm, email: e.target.value })}
-                    className="bg-gray-800 border-gray-600 text-white"
-                    placeholder="ornek@email.com"
-                    required
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        E-Mail <span className="text-red-400">*</span>
+                      </label>
+                      <Input
+                        type="email"
+                        value={registrationForm.email}
+                        onChange={(e) => setRegistrationForm({ ...registrationForm, email: e.target.value })}
+                        className="bg-gray-800 border-gray-600 text-white"
+                        placeholder="ornek@email.com"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">

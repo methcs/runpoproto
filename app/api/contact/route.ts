@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     console.log("SMTP port:", smtpPort)
 
     // hosting.com.tr SMTP ayarları
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: smtpHost || "mail.runpocoaching.com", // hosting.com.tr genellikle mail.domain.com formatı kullanır
       port: Number.parseInt(smtpPort),
       secure: smtpPort === "465", // SSL için 465, TLS için 587

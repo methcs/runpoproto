@@ -3,6 +3,10 @@
 import { useState } from "react"
 import { Menu, Mail, Instagram, Facebook, Twitter, Youtube, X, Lock, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import dynamic from 'next/dynamic'
+
+// AuthButton is client-only; load dynamically to avoid include in server bundle
+const AuthButton = dynamic(() => import('./auth-button'), { ssr: false })
 
 interface HeaderProps {
   isAdmin?: boolean
@@ -136,6 +140,11 @@ export function Header({ isAdmin = false, onAdminToggle }: HeaderProps) {
               >
                 İletişim
               </a>
+
+              {/* Auth button (Sign up / username) */}
+              <div className="ml-4">
+                <AuthButton />
+              </div>
             </nav>
 
             {/* Mobile menu button */}
@@ -187,6 +196,13 @@ export function Header({ isAdmin = false, onAdminToggle }: HeaderProps) {
               >
                 İletişim
               </a>
+
+              {/* Mobile auth button */}
+              <div className="pt-4 border-t border-gray-800">
+                <div className="flex items-center justify-center mb-3">
+                  <AuthButton />
+                </div>
+              </div>
 
               {/* Mobile contact info */}
               <div className="pt-4 border-t border-gray-800">

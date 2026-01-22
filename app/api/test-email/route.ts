@@ -43,7 +43,7 @@ export async function POST() {
     }
 
     // hosting.com.tr SMTP test
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: smtpHost || "mail.runpocoaching.com", // hosting.com.tr default
       port: Number.parseInt(smtpPort),
       secure: smtpPort === "465",
@@ -84,7 +84,7 @@ export async function POST() {
 
       // hosting.com.tr için özel hata analizi
       let errorAnalysis = "Bilinmeyen SMTP hatası"
-      let suggestions = []
+      let suggestions: string[] = []
 
       if (smtpError instanceof Error) {
         if (smtpError.message.includes("ECONNREFUSED")) {

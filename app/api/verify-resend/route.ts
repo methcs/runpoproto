@@ -68,7 +68,8 @@ export async function POST() {
       }
 
       console.log("API key verified successfully")
-      console.log("Available domains:", domains?.length || 0)
+      const domainsList = (domains as unknown as any[]) || []
+      console.log("Available domains:", domainsList.length)
 
       return NextResponse.json({
         success: true,
@@ -78,8 +79,8 @@ export async function POST() {
           keyLength,
           keyPrefix: keyPrefix + "...",
           keyFormat: "valid",
-          domainsCount: domains?.length || 0,
-          availableDomains: domains?.map((d) => d.name) || [],
+          domainsCount: domainsList.length,
+          availableDomains: domainsList.map((d: any) => d.name) || [],
         },
       })
     } catch (resendError) {
