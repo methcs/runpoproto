@@ -356,7 +356,7 @@ export default function YarisTakvimiPage() {
               <span className="text-yellow-400"> TAKVİMİ</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
-              2026 yılının en heyecan verici koşu etkinlikleri
+              2025 yılının en heyecan verici koşu etkinlikleri
             </p>
 
             {/* Stats */}

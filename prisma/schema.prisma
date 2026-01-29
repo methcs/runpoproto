@@ -52,7 +52,7 @@ model Registration {
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
-  email        String?  @unique
+  email        String   @unique
   passwordHash String
   name         String?
   createdAt    DateTime @default(now())

@@ -10,8 +10,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { username, email, password, name } = body
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'username and password are required' }, { status: 400 })
+    // Validate inputs
+    if (!username || !password || !email) {
+      return NextResponse.json({ error: 'username, email and password are required' }, { status: 400 })
+    }
+
+    // Basic email format check
+    const emailRegex = /^\S+@\S+\.\S+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
     // check existing

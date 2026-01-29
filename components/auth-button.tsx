@@ -28,6 +28,15 @@ export default function AuthButton() {
   const handleSignup = async () => {
     setSubmitting(true)
     setError(null)
+
+    // Client-side validation for email
+    const emailRegex = /^\S+@\S+\.\S+$/
+    if (!email || !emailRegex.test(email)) {
+      setError('Lütfen geçerli bir e-posta girin.')
+      setSubmitting(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -100,8 +109,12 @@ export default function AuthButton() {
                 <label className="block text-sm">Kullanıcı Adı</label>
                 <Input value={username} onChange={(e) => setUsername(e.target.value)} />
 
-                <label className="block text-sm">E-posta (opsiyonel)</label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} />
+                <label className="block text-sm">E-posta</label>
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} required />
+                {/* Show inline email validation error if present */}
+                {error && tab === 'signup' && !email && (
+                  <div className="text-sm text-destructive">E-posta alanı zorunludur.</div>
+                )}
 
                 <label className="block text-sm">İsim (opsiyonel)</label>
                 <Input value={name} onChange={(e) => setName(e.target.value)} />
